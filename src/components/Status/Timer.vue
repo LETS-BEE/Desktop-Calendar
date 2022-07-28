@@ -1,6 +1,6 @@
 <template>
   <h1
-    class="uk-text-center uk-margin-large-top"
+    class="uk-text-center uk-margin-small-top"
     :style="{
       'font-size': timeStyle.size,
       'font-weight': timeStyle.weight,
@@ -13,9 +13,10 @@
 </template>
 
 <script>
-import { moment } from "fullcalendar";
+import moment from 'moment'
+
 export default {
-  name: "timer",
+  name: "main-timer",
   data() {
     return {
       datenow: "wait.."
@@ -24,9 +25,9 @@ export default {
   methods: {
     time() {
       // 현재 시간 반환
-      this.datenow = moment(new Date())
-        .locale("ko")
-        .format(this.timeMoment);
+      this.datenow = moment()
+        .locale(window.defaultLocale)
+        .format(this.timeMoment)
     }
   },
   mounted() {
@@ -36,7 +37,7 @@ export default {
       this.interval = setInterval(this.time, 1000);
     }, 1000 - new Date().getMilliseconds()); // Millisecond 맞춤
   },
-  beforeDestroy() {
+  beforeUnmout() {
     clearInterval(this.interval);
   },
   computed: {

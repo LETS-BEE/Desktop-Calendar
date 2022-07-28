@@ -1,7 +1,8 @@
 <template>
-  <vk-card
-    class="uk-card-small"
+  <div
+    class="uk-card uk-card-default uk-padding-small"
     id="gcal-event"
+    style="min-width: 300px"
     :style="{
       borderTopColor: event.color,
       top: event.top + 'px',
@@ -10,18 +11,17 @@
     @mouseover="setIgnore"
     @mouseout="disableIgnore"
   >
-    <div slot="header" style="padding: 0">
-      <vk-icon-link
+    <slot name="header" style="padding: 0">
+      <span
         id="open-google-calendar"
-        icon="google"
-        class="uk-position-top-right uk-padding-small uk-border-circle google-button"
-        v-vk-tooltip="'Google Calendar에서 엽니다.'"
+        uk-icon="google"
+        class="uk-icon-link uk-position-top-right uk-padding-small uk-border-circle google-button"
+        uk-tooltip="'Google Calendar에서 엽니다.'"
         v-on:click="openGCal()"
       />
-      <vk-card-title
-        class="uk-margin-small-top gcal-title uk-margin-remove-bottom"
-        >{{ event.title }}</vk-card-title
-      >
+      <div
+        class="uk-card-title uk-margin-small-top gcal-title uk-margin-remove-bottom"
+        >{{ event.title }}</div>
       <p class="uk-text-meta uk-margin-remove-top">
         {{
           event.organizer
@@ -31,16 +31,16 @@
       </p>
       <p
         class="uk-text-meta uk-margin-remove timeShow"
-        v-vk-tooltip="'클릭으로 보기 변경'"
+        uk-tooltip="'클릭으로 보기 변경'"
         @click="timeShow = true"
         v-if="!timeShow"
       >
-        <vk-icon v-if="timePast" icon="history"></vk-icon>
-        <vk-icon v-else icon="future"></vk-icon>
-        <time>{{ getFromNow() }}</time>
+        <span v-if="timePast" uk-icon="history"></span>
+        <span v-else uk-icon="future"></span>
+        <time class="uk-margin-small-left">{{ getFromNow() }}</time>
       </p>
       <div
-        v-vk-tooltip="'클릭으로 보기 변경'"
+        uk-tooltip="'클릭으로 보기 변경'"
         v-if="timeShow"
         @click="timeShow = false"
       >
@@ -58,33 +58,37 @@
           >
         </p>
       </div>
-    </div>
-    <vk-icon-link
-      v-if="!isDelete"
-      icon="trash"
-      class="uk-float-right"
-      v-vk-tooltip="'이벤트 삭제'"
-      @click="deleteEvent"
-    ></vk-icon-link>
-    <vk-spinner v-else ratio="0.7" class="uk-float-right"></vk-spinner>
-    <div
-      v-if="deleteError"
-      class="uk-alert uk-alert-danger uk-padding-small"
-      uk-alert
-    >
-      <p>삭제에 실패하였습니다.</p>
-    </div>
-    <p class="gcal-body markdown-body" v-html="getDescription" v-linkified />
-  </vk-card>
+      <hr/>
+      <div
+        v-if="!isDelete" 
+        uk-icon="trash"
+        uk-tooltip="'이벤트 삭제'"
+        class="uk-icon-link uk-float-right"
+        @click="deleteEvent"/>
+
+      <div v-else uk-spinner='ratio: 0.7' class="uk-float-right"></div>
+      <div
+        v-if="deleteError" 
+        class="uk-alert-danger uk-padding-small"
+        uk-alert
+      >
+        <p>삭제에 실패하였습니다.</p>
+      </div>
+    </slot>
+    <p class="gcal-body markdown-body" v-html="getDescription" v-linkify />
+  </div>
 </template>
 
 <script>
-import * as auth from "./api.js";
-import fs from "fs";
-import { shell } from "electron";
-const api = auth.default;
+import fs from 'fs'
+import { shell } from 'electron'
+import * as auth from "./api.js"
+
+const api = auth.default
+let accessCount = 0
+
 export default {
-  name: "event",
+  name: "calendar-event",
   data() {
     return {
       gcolor: null,
@@ -111,46 +115,68 @@ export default {
           organizer: e.organizer,
           description: e.description || null,
           created: e.created
-        };
-      });
-      this.Fcalendar.renderEvents(data);
+        }
+      })
+      this.Fcalendar.renderEvents(data)
     },
     openGCal() {
-      this.openExternal(this.event.e.htmlLink);
+      this.openExternal(this.event.e.htmlLink)
     },
     openExternal(link) {
-      shell.openExternal(link);
-      return false;
+      shell.openExternal(link)
+      return false
     },
     init() {
-      var colors = {};
-      api.setAxios(this.$http);
+      var colors = {}
+      api.setAxios(this.$http)
       api.authorize(key => {
-        this.$http.defaults.headers.common["Authorization"] = "Bearer " + key;
+        this.$http.defaults.headers.common["Authorization"] = "Bearer " + key
         api.colors(color => {
-          this.gcolor = color.data;
+          this.gcolor = color.data
           fs.readFile(this.appdata + "/calendar.json", (err, res) => {
-            if (err) return console.error(err);
-            const calendars = JSON.parse(res);
-            // console.log(calendars)
-            this.Fcalendar.removeEvents();
+            if (err)
+              return console.error(err)
+
+            const calendars = JSON.parse(res)
+            
+            this.Fcalendar.removeEvents()
+
+            accessCount += 1
+            var checkedCalendar = 0
+            var calNum = 0
+
             for (const cal of calendars) {
-              if (!cal.checked) continue;
-              // console.log(cal)
-              colors[cal.id] = this.gcolor.calendar[cal.colorId];
+              if (!cal.checked) {
+                continue
+              }
+              
+              checkedCalendar += 1
+              colors[cal.id] = this.gcolor.calendar[cal.colorId]
+
               api.events(
                 cal.id,
                 this.Fcalendar.view.start,
                 this.Fcalendar.view.end,
                 events => {
-                  if (!events) return 0;
-                  this.addEvent(events.data.items, colors[cal.id]);
+                  calNum += 1
+                  var lastPass = false
+                  
+                  if (checkedCalendar == calNum ) {
+                    if (accessCount >= 2)
+                      lastPass = true
+                    accessCount -= 1
+                  }
+
+                  if (accessCount >= 2 || lastPass)  return
+                  if (checkedCalendar == calNum ) this.emitter.emit("reloadEnd")
+
+                  if (events.data.items.length == 0) return
+                  this.addEvent(events.data.items, colors[cal.id])
                 }
-              );
+              )
             }
-            this.$bus.emit("reloadEnd");
-          });
-        });
+          })
+        })
       });
     },
     getFromNow() {
@@ -205,11 +231,11 @@ export default {
   },
   mounted() {
     this.init();
-    this.$bus.$on("loadURL", url => {
+    this.emitter.on("loadURL", url => {
       this.openExternal(url);
     });
     this.refreshInterval = setInterval(this.init, this.getRefresh * 1000);
-    this.$bus.$on("forceReload", () => {
+    this.emitter.on("forceReload", () => {
       this.init();
     });
   },
