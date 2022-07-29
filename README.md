@@ -15,7 +15,7 @@
 
 # Program Images
 ## White
-<img src="public/White.png" />
+<img src="public/white.png" />
 
 ## Black
 <img src="public/black.png"/>
