@@ -1,6 +1,6 @@
 {
   "name": "desktop-calendar",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "LETBBI & tbvjaos510 <ghghdirk12@gmail.com, tbvjaos510@naver.com>",
   "description": "electron-vue으로 제작한 desktop calendar",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "dayspan": "^1.1.0",
     "dayspan-vuetify": "^0.4.0",
     "electron-disable-minimize": "^2.1.0",
-    "electron-json-storage": "^4.5.0",
+    "electron-store": "^8.0.2",
     "electron-updater": "^5.0.5",
     "fullcalendar": "3.10.5",
     "googleapis": "^105.0.0",

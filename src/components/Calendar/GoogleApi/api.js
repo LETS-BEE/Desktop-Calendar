@@ -22,7 +22,6 @@ function createToken(client, code, callback) {
   client.getToken(code, (err, token) => {
     if (err) return console.error("Error Create Token", err);
     client.setCredentials(token);
-    console.log(TOKEN_PATH);
     return FileWrite(token, callback)
   });
 }
@@ -35,7 +34,6 @@ function getAccessToken(client, callback) {
     access_type: "offline",
     scope: SCOPES
   });
-  // console.log('Auth in authUrl', authUrl)
   if (Popup === null) {
     Popup = new remote.BrowserWindow({ height: 850, transparent: false, frame: true });
     Popup.setIgnoreMouseEvents(false);
@@ -44,13 +42,15 @@ function getAccessToken(client, callback) {
     window.Popup = Popup;
     Popup.on("closed", () => {
       Popup = null;
-    });
-    Popup.on("page-title-updated", (e, t) => {
-      if (t.indexOf("Success code=") !== -1) {
-        createToken(client, t.split("Success code=")[1], callback);
-        Popup.close();
+    })
+
+    Popup.webContents.on("will-redirect", (e, url) => {
+      if (url.indexOf("http://localhost") !== -1) {
+        url = decodeURIComponent(url.split("&")[0].split("code=")[1])
+        createToken(client, url, callback)
+        Popup.close()
       }
-    });
+    })
   }
 }
 function RefreshToken(client, callback) {
@@ -86,8 +86,8 @@ export default {
       credentials.installed.clientsecret,
       credentials.installed.redirecturis[0]
     )
+
     // Check if we have previously stored a token.r
-    
     fs.readFile(TOKEN_PATH, (err, token) => {
       if (err || !token) { 
         return getAccessToken(oAuth2Client, callback)

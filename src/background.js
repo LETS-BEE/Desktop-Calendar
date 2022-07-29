@@ -10,6 +10,7 @@ import {
   Tray,
   ipcMain
 } from 'electron'
+import Store from 'electron-store'
 import * as remoteMain from '@electron/remote/main'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
@@ -30,6 +31,7 @@ protocol.registerSchemesAsPrivileged([
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow, startWindow;
 let tray = null;
+const store = new Store();
 
 function createWindow() {
   openTray()
@@ -47,7 +49,11 @@ function createWindow() {
       enableRemoteModule: true
     }
   })
-  mainWindow.setBounds(screen.getAllDisplays()[0].bounds)
+  var rect = store.get('bounds')
+  if (rect === undefined)
+    rect = screen.getAllDisplays()[0].bounds
+  mainWindow.setBounds(rect)
+
   mainWindow.setIgnoreMouseEvents(true, { forward: true })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -74,6 +80,15 @@ function createWindow() {
   })
   mainWindow.on("closed", () => {
     mainWindow = null
+  })
+
+  mainWindow.on("moved", () => {
+    var nowRect = mainWindow.getBounds()
+    var lastRect = screen.getDisplayMatching(nowRect).bounds
+    lastRect.x = nowRect.x
+    lastRect.y = nowRect.y
+    mainWindow.setBounds(lastRect)
+    store.set('bounds', lastRect)
   })
 }
 

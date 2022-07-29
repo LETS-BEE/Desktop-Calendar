@@ -3,6 +3,8 @@
 
 > 일부 디자인 수정을 위해 시작했는데 너무 많이 고쳐서 새로 저장소를 만들었습니다.
 
+> 본 주인이 2년간 수정하지 않은 것도 그 이유 중 하나입니다.
+
 ## Stacks
 * [NodeJS](https://nodejs.org/) ver.16.16.0 LTS
 * [Electron-Vue](https://github.com/SimulatedGREG/electron-vue)
@@ -23,7 +25,11 @@
 ***
 
 # ChangeLog
-## 3.0.0 (Lastest)
+## 3.0.1 (Lastest)
+* [fix] google의 oauth 2.0 정책 혹은 "urn:ietf:wg:oauth:2.0:oob" 오류 수정
+* [add] 달력 위치 저장 기능 추가
+
+## 3.0.0
 * Node.js 버전을 16.16.0 LTS로 변경
 * electron 13으로 변경
 * vue-cli 3로 변경

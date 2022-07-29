@@ -27,7 +27,7 @@
             v-model="key.checked"
             :disabled="key.isprimary"
           />
-          <span class="uk-margin-small-left" uk-tooltip="key.isprimary ? '기본 달력입니다' : null">{{
+          <span class="uk-margin-small-left" :uk-tooltip="[key.isprimary ? '기본 달력입니다' : null]">{{
             key.summary
           }}</span>
         </li>
