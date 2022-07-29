@@ -4,8 +4,6 @@
     id="gcal-event"
     style="min-width: 300px"
     :style="{
-      borderTopColor: event.color,
-      top: event.top + 'px',
       left: event.left + 'px'
     }"
     @mouseover="setIgnore"
@@ -97,7 +95,7 @@ export default {
       isDelete: false,
       deleteError: false,
       isUpdate: false,
-      refreshInterval: null
+      refreshInterval: null,
     };
   },
   methods: {
@@ -238,6 +236,8 @@ export default {
     this.emitter.on("forceReload", () => {
       this.init();
     });
+    const $ = window.$
+    $("#gcal-event").resize(this.boundsRect)
   },
   computed: {
     getDescription() {
@@ -257,7 +257,26 @@ export default {
         setInterval(this.init, newValue * 1000);
         // console.log('refresh Interval')
       }
-    }
+    },
+  },
+  updated: function() {
+    this.$nextTick(() => {
+      const $ = window.$
+      var top = this.event.top
+
+      if ($('#gcal-event').outerHeight() !== undefined)
+      { 
+        $('#gcal-event').css('border-top-color', this.event.color)
+        $('#gcal-event').css('border-bottom-color', 'white')
+        
+        if ($('#gcal-event').outerHeight() + this.event.top > window.outerHeight * 0.9) {
+          top = this.event.top - this.event.titleHeight - $('#gcal-event').outerHeight()
+          $('#gcal-event').css('border-top-color', 'white')
+          $('#gcal-event').css('border-bottom-color', this.event.color)
+        }
+      }
+      $('#gcal-event').css('top', top)
+    })
   },
   props: ["Fcalendar", "event"]
 };
@@ -271,7 +290,8 @@ export default {
   max-width: 400px;
   top: 50px;
   z-index: 10;
-  border-top: 6px solid green;
+  border-top: 6px solid white;
+  border-bottom: 6px solid white;
 }
 .google-button:hover {
   background: lightgray;

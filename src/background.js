@@ -87,7 +87,7 @@ function createWindow() {
     var lastRect = screen.getDisplayMatching(nowRect).bounds
     lastRect.x = nowRect.x
     lastRect.y = nowRect.y
-    mainWindow.setBounds(lastRect)
+    mainWindow.setSize(lastRect.width, lastRect.height)
     store.set('bounds', lastRect)
   })
 }

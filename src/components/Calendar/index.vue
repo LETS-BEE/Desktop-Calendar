@@ -35,14 +35,14 @@
                 <option>날짜-시간</option>
               </select> <br>
               시작
-              <DatePicker v-model='startTime' v-if="timeType == '날짜'" :phrases="{ok: '확인', cancel: '취소'}" type="date"  input-class='uk-width color-input' :use12-hour='true'/>
-              <DatePicker v-model='startTime' v-else :phrases="{ok: '확인', cancel: '취소'}" type="datetime"  input-class='uk-width color-input' :use12-hour='true'/>
+              <DatePicker v-model='startTime' v-if="timeType == '날짜'" :format="dateFormat" :previewFromat="dateFormat" :modelType="dateFormat" input-class='uk-width color-input' :is24='false' modelAuto autoApply/>
+              <DatePicker v-model='startTime' v-else :format="datetimeFormat" :previewFromat="datetimeFormat" :modelType="datetimeFormat" input-class='uk-width color-input' :is24='false' modelAuto autoApply/>
               
             </p>
             <p class='uk-margin-small-top'>
               종료
-              <DatePicker v-model='endTime' v-if="timeType == '날짜'" :phrases="{ok: '확인', cancel: '취소'}" type="date"  input-class='uk-width' :use12-hour='true'/>
-              <DatePicker v-model='endTime' v-else :phrases="{ok: '확인', cancel: '취소'}" type="datetime"  input-class='uk-width' :use12-hour='true'/>
+              <DatePicker v-model='endTime' v-if="timeType == '날짜'" :format="dateFormat" :previewFromat="dateFormat" :modelType="dateFormat" input-class='uk-width' :is24='false' modelAuto autoApply/>
+              <DatePicker v-model='endTime' v-else :format="datetimeFormat" :previewFromat="datetimeFormat" :modelType="datetimeFormat" input-class='uk-width' :is24='false' modelAuto autoApply/>
             </p>
             <p class='uk-margin-small-top'>
               <template style="display:block">
@@ -81,6 +81,11 @@ const $ = window.$
 
 window.moment = moment
 
+const dpFormat = 'yyyy-MM-dd'
+const dptFormat = 'yyyy-MM-dd hh:mm aa'
+const mFormat = 'yyyy-MM-DD'
+const mtFormat = 'yyyy-MM-DD hh:mm A'
+
 export default {
   name: 'main-calendar',
   data () {
@@ -93,7 +98,7 @@ export default {
       summary: '',
       description: '',
       calendarid: '',
-      startTime: null,
+      startTime: new Date(),
       endTime: '',
       colorid: 1,
       timeType: '날짜',
@@ -161,7 +166,6 @@ export default {
         : `file://${__dirname}/index.html#setting`
       
       
-      
       let settingWindow = new remote.BrowserWindow({
         parent: remote.getCurrentWindow(),
         frame: true,
@@ -198,6 +202,20 @@ export default {
     insertEvent () {
       this.$refs.eventAddDrop.__uikit__.drop.hide()
       let resultHtml = converter.makeHtml(this.description)
+
+      if (this.endTime === '') {
+        this.endTime = this.startTime
+      }
+
+      this.endTime = moment(this.endTime).add(1, "d")
+      
+      if (this.timeType === '날짜') {
+        this.endTime = this.endTime.format(mFormat)
+      } else {
+        this.endTime = this.endTime.format()
+        this.startTime = moment(this.startTime).format()
+      }
+
       this.$refs.eventform.insertEvent(this.calendarid, this.timeType === '날짜', this.startTime, this.endTime, this.summary, resultHtml, this.colorid + 1, (e) => {
         if (e) console.log(e)
       })
@@ -268,7 +286,8 @@ export default {
         if (this.$refs.eventform.isDelete) {
           return 0
         }
-        event.top = jsevent.currentTarget.getBoundingClientRect().top + jsevent.currentTarget.getBoundingClientRect().height
+        event.titleHeight = jsevent.currentTarget.getBoundingClientRect().height
+        event.top = jsevent.currentTarget.getBoundingClientRect().top + event.titleHeight
         event.left = jsevent.currentTarget.getBoundingClientRect().left
         this.eventValue = event
         this.show = true
@@ -300,6 +319,11 @@ export default {
     $('#calendar ').css('background-color', this.convertRGBA(this.getCalendarOption.background.rgba || this.getCalendarOption.background))
 
     this.calendarList()
+
+    remote.getCurrentWindow().on('resize', () => {
+      var sz = remote.getCurrentWindow().getSize()
+      window.resizeTo(sz[0], sz[1])
+    })
   },
   computed: {
     getCalendarOption () {
@@ -310,6 +334,12 @@ export default {
     },
     getCalendarHeight () {
       return this.$store.getters.getOptions('calendarHeight')
+    },
+    dateFormat() {
+      return dpFormat
+    },
+    datetimeFormat() {
+      return dptFormat
     }
   },
   components: {
@@ -318,6 +348,13 @@ export default {
   watch: {
     'startTime': function (newval) {
       this.endTime = newval
+    },
+    'timeType' : function (newval) {
+      if (newval === '날짜') {
+        this.startTime = moment(this.startTime).format(mFormat)
+      } else {
+        this.startTime = moment(this.startTime).format(mtFormat)
+      }
     },
     getCalendarOption (newval) {
       $('#calendar, .fc-center>h2').css('color', this.convertRGBA(newval.color.rgba || newval.color))

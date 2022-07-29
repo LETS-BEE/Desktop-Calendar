@@ -25,7 +25,12 @@
 ***
 
 # ChangeLog
-## 3.0.1 (Lastest)
+## 3.0.2 (Lastest)
+* [fix] 2일 이상 일정 정상 표시
+* [fix] 일정을 추가할 때 날짜, 날짜-시간 변경 시 시간 정상 표시
+* [add] 다중 모니터 지원
+
+## 3.0.1
 * [fix] google의 oauth 2.0 정책 혹은 "urn:ietf:wg:oauth:2.0:oob" 오류 수정
 * [add] 달력 위치 저장 기능 추가
 
