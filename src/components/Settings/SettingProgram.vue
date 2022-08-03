@@ -46,7 +46,7 @@ export default {
   name: "setting-program",
   mounted() {
     var temp = app.getLoginItemSettings().openAtLogin
-    if (process.platform === 'win32')
+    if (process.platform == 'win32')
       temp = app.getLoginItemSettings().executableWillLaunchAtLogin
     this.onstartup = temp
     console.log(temp)

@@ -319,11 +319,6 @@ export default {
     $('#calendar ').css('background-color', this.convertRGBA(this.getCalendarOption.background.rgba || this.getCalendarOption.background))
 
     this.calendarList()
-
-    remote.getCurrentWindow().on('resize', () => {
-      var sz = remote.getCurrentWindow().getSize()
-      window.resizeTo(sz[0], sz[1])
-    })
   },
   computed: {
     getCalendarOption () {

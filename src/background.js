@@ -49,10 +49,32 @@ function createWindow() {
       enableRemoteModule: true
     }
   })
+
+  var primeDisplay = null
   var rect = store.get('bounds')
-  if (rect === undefined)
-    rect = screen.getAllDisplays()[0].bounds
+  if (rect === undefined) {
+    primeDisplay = screen.getAllDisplays()[0]
+    rect = primeDisplay.bounds
+  }
+  else {
+    primeDisplay = screen.getDisplayMatching(rect)
+    var newRect = primeDisplay.bounds
+
+    if (rect.x  < newRect.x - newRect.width * 0.2)
+      newRect.x = Math.round(newRect.x - newRect.width * 0.2)
+    else if (rect.x  > newRect.x + newRect.width * 0.2)
+      newRect.x = Math.round(newRect.x + newRect.width * 0.2)
+    else
+      newRect.x = rect.x
+
+    if (rect.y < newRect.y + newRect.height * 0.5)
+      newRect.y = rect.y
+
+    rect = newRect
+  }
+  console.log(rect)
   mainWindow.setBounds(rect)
+  mainWindow.webContents.setZoomFactor(1)
 
   mainWindow.setIgnoreMouseEvents(true, { forward: true })
 
@@ -84,11 +106,32 @@ function createWindow() {
 
   mainWindow.on("moved", () => {
     var nowRect = mainWindow.getBounds()
-    var lastRect = screen.getDisplayMatching(nowRect).bounds
-    lastRect.x = nowRect.x
-    lastRect.y = nowRect.y
-    mainWindow.setSize(lastRect.width, lastRect.height)
+    var display = screen.getDisplayMatching(nowRect)
+    var lastRect = display.bounds
+
+    if (nowRect.x  < lastRect.x - lastRect.width * 0.2)
+      lastRect.x = Math.round(lastRect.x - lastRect.width * 0.2)
+    else if (nowRect.x  > lastRect.x + lastRect.width * 0.2)
+      lastRect.x = Math.round(lastRect.x + lastRect.width * 0.2)
+    else
+      lastRect.x = nowRect.x
+
+    if (nowRect.y < lastRect.y + lastRect.height * 0.5)
+      lastRect.y = nowRect.y
+
+    mainWindow.setBounds(lastRect)
+    mainWindow.webContents.setZoomFactor(1)
     store.set('bounds', lastRect)
+  })
+  
+  mainWindow.on('resized', () => {
+    var sz = mainWindow.getSize()
+    window.resizeTo(sz[0], sz[1])
+  })
+
+  screen.on('display-removed', () => {
+    const [x, y] = mainWindow.getPosition();
+		mainWindow.setPosition(x, y);
   })
 }
 

@@ -64,7 +64,7 @@ export default {
   },
   mounted() {
     var temp = app.getLoginItemSettings().openAtLogin
-    if (process.platform === 'win32')
+    if (process.platform == 'win32')
       temp = app.getLoginItemSettings().executableWillLaunchAtLogin
     this.autoStart = temp
   }
