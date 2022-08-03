@@ -67,12 +67,14 @@ function createWindow() {
     else
       newRect.x = rect.x
 
-    if (rect.y < newRect.y + newRect.height * 0.5)
+    if (rect.y > newRect.y + newRect.height * 0.5)
+      newRect.y = newRect.y + newRect.height * 0.5
+    else
       newRect.y = rect.y
 
     rect = newRect
   }
-  console.log(rect)
+  
   mainWindow.setBounds(rect)
   mainWindow.webContents.setZoomFactor(1)
 
@@ -116,17 +118,14 @@ function createWindow() {
     else
       lastRect.x = nowRect.x
 
-    if (nowRect.y < lastRect.y + lastRect.height * 0.5)
+    if (nowRect.y > lastRect.y + lastRect.height * 0.5)
+      lastRect.y = lastRect.y + lastRect.height * 0.5
+    else
       lastRect.y = nowRect.y
 
     mainWindow.setBounds(lastRect)
     mainWindow.webContents.setZoomFactor(1)
     store.set('bounds', lastRect)
-  })
-  
-  mainWindow.on('resized', () => {
-    var sz = mainWindow.getSize()
-    window.resizeTo(sz[0], sz[1])
   })
 
   screen.on('display-removed', () => {
