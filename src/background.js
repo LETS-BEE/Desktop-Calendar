@@ -32,6 +32,7 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow, startWindow;
 let tray = null;
 const store = new Store();
+let windowMoving = false, display = null;
 
 function createWindow() {
   openTray()
@@ -50,25 +51,24 @@ function createWindow() {
     }
   })
 
-  var primeDisplay = null
   var rect = store.get('bounds')
   if (rect === undefined) {
-    primeDisplay = screen.getAllDisplays()[0]
-    rect = primeDisplay.bounds
+    display = screen.getAllDisplays()[0]
+    rect = display.workArea
   }
   else {
-    primeDisplay = screen.getDisplayMatching(rect)
-    var newRect = primeDisplay.bounds
+    display = screen.getDisplayMatching(rect)
+    var newRect = display.workArea
 
     if (rect.x  < newRect.x - newRect.width * 0.2)
-      newRect.x = Math.round(newRect.x - newRect.width * 0.2)
+      newRect.x = parseInt(newRect.x - newRect.width * 0.2)
     else if (rect.x  > newRect.x + newRect.width * 0.2)
-      newRect.x = Math.round(newRect.x + newRect.width * 0.2)
+      newRect.x = parseInt(newRect.x + newRect.width * 0.2)
     else
       newRect.x = rect.x
 
     if (rect.y > newRect.y + newRect.height * 0.5)
-      newRect.y = newRect.y + newRect.height * 0.5
+      newRect.y = parseInt(newRect.y + newRect.height * 0.5)
     else
       newRect.y = rect.y
 
@@ -108,9 +108,8 @@ function createWindow() {
 
   mainWindow.on("moved", () => {
     var nowRect = mainWindow.getBounds()
-    var display = screen.getDisplayMatching(nowRect)
-    var lastRect = display.bounds
-
+    var newDisplay = screen.getDisplayMatching(nowRect)
+    var lastRect = newDisplay.workArea
     if (nowRect.x  < lastRect.x - lastRect.width * 0.2)
       lastRect.x = Math.round(lastRect.x - lastRect.width * 0.2)
     else if (nowRect.x  > lastRect.x + lastRect.width * 0.2)
@@ -119,13 +118,27 @@ function createWindow() {
       lastRect.x = nowRect.x
 
     if (nowRect.y > lastRect.y + lastRect.height * 0.5)
-      lastRect.y = lastRect.y + lastRect.height * 0.5
+      lastRect.y = Math.round(lastRect.y + lastRect.height * 0.5)
     else
       lastRect.y = nowRect.y
-
-    mainWindow.setBounds(lastRect)
-    mainWindow.webContents.setZoomFactor(1)
+    
+    if (display.id !== newDisplay.id) {
+      windowMoving = true
+      mainWindow.setBounds(lastRect)
+      mainWindow.webContents.setZoomFactor(1)
+      display = newDisplay
+    }
     store.set('bounds', lastRect)
+    windowMoving = false
+  })
+
+  mainWindow.on('resize', () => {
+    if (windowMoving) {
+      var sz = mainWindow.getSize()
+      mainWindow.webContents.executeJavaScript(`window.resizeTo(${sz[0]}, ${sz[1]})`)
+      // ./Calendar/index.vue?304
+      mainWindow.webContents.executeJavaScript(`window.onresize()`)
+    }
   })
 
   screen.on('display-removed', () => {

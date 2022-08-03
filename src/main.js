@@ -26,12 +26,6 @@ window.jQuery = jQueryUI
 window.defaultLocale = Settings.defaultLocale = 'ko'
 
 const win = getCurrentWindow()
-
-win.on('resize', () => {
-    var sz = win.getSize()
-    window.resizeTo(sz[0], sz[1])
-})
-
 const enableMouse = function() {
     win.setIgnoreMouseEvents(false)
 }
